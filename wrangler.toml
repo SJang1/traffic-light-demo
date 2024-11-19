@@ -85,3 +85,10 @@ database_id = "02485f82-5c1e-44ee-8fd0-935f282deceb"
 # [[env.production.kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"
 # id = "<PRODUCTION_NAMESPACE_ID>"
+
+
+[env.preview]
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "traffic-light-demo"
+database_id = "02485f82-5c1e-44ee-8fd0-935f282deceb"
