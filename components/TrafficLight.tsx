@@ -8,7 +8,7 @@ type TrafficLightStatus = 'red' | 'yellow' | 'green';
 // Type for our API response
 interface TrafficLightData {
   id: number;
-  location: string;
+  location: number;
   status: TrafficLightStatus;
   last_updated: string;
 }
@@ -67,7 +67,7 @@ const TrafficLight = () => {
       typeof data === 'object' &&
       data !== null &&
       typeof data.id === 'number' &&
-      typeof data.location === 'string' &&
+      typeof data.location === 'number' &&
       typeof data.status === 'string' &&
       ['red', 'yellow', 'green'].includes(data.status) &&
       typeof data.last_updated === 'string'

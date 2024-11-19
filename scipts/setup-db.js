@@ -12,6 +12,6 @@ try {
 
 // Execute the schema
 console.log('Applying schema...');
-execSync('wrangler d1 execute traffic-lights-dev --file=./schema.sql', { stdio: 'inherit' });
+execSync('wrangler d1 execute traffic-lights-dev --file=../schema.sql', { stdio: 'inherit' });
 
 console.log('Database setup complete!');
