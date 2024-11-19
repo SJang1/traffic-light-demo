@@ -7,7 +7,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Traffic Light Monitor',
+  title: '신호등 상태 모니터링',
   description: 'Real-time traffic light monitoring system using Cloudflare Pages and D1',
 };
 
@@ -50,7 +50,7 @@ export default function RootLayout({
           <footer className="bg-white border-t border-gray-200 mt-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-center">
               <p className="text-sm text-gray-500">
-                © {new Date().getFullYear()} Traffic Monitor. Built with Next.js and Cloudflare.
+                © 2024 우송대 철도IOT코딩 4조. Built with Next.js and Cloudflare with ❤️.
               </p>
             </div>
           </footer>
