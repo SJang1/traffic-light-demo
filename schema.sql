@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS traffic_lights;
 
 CREATE TABLE traffic_lights (
     id INTEGER PRIMARY KEY,
-    distance_cm INTEGER NOT NULL DEFAULT 0 CHECK(distance_cm >= 0),
+    distance_cm INTEGER NOT NULL DEFAULT 0 CHECK(distance_cm >= -1),
     status TEXT NOT NULL DEFAULT 'red' CHECK(status IN ('red', 'yellow', 'green')),
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
