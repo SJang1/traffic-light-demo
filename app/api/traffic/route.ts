@@ -9,6 +9,11 @@ interface TrafficLight {
   last_updated: string;
 }
 
+// Define the environment interface
+interface Env {
+  DB: D1Database;
+}
+
 export const runtime = 'edge';
 
 // Mock data updated with distance
@@ -19,18 +24,16 @@ const mockTrafficLight: TrafficLight = {
   last_updated: new Date().toISOString()
 };
 
-export async function GET(request: NextRequest) {
-  const env = process.env.DB;
-
+export async function GET(request: NextRequest, ctx: { env: Env }) {
   try {
-    if (!env?.DB) {
-      console.warn('No DB binding found, using mock data');
+    if (!ctx.env) {
+      console.warn('No environment bindings found, using mock data');
       return new Response(JSON.stringify(mockTrafficLight), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const stmt = await env.DB.prepare(
+    const stmt = await ctx.env.DB.prepare(
       `SELECT id, distance_cm, status, last_updated 
        FROM traffic_lights 
        WHERE id = 1`
@@ -56,9 +59,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
-  const env = process.env.DB;
-
+export async function POST(request: NextRequest, ctx: { env: Env }) {
   try {
     const body = await request.json();
     const { status, distance_cm } = body as { 
@@ -81,8 +82,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!env?.DB) {
-      console.warn('No DB binding found, using mock data');
+    if (!ctx.env) {
+      console.warn('No environment bindings found, using mock data');
       if (status) mockTrafficLight.status = status;
       if (distance_cm !== undefined) mockTrafficLight.distance_cm = distance_cm;
       mockTrafficLight.last_updated = new Date().toISOString();
@@ -104,18 +105,22 @@ export async function POST(request: NextRequest) {
     }
     updates.push('last_updated = CURRENT_TIMESTAMP');
 
-    const stmt = await env.DB.prepare(
+    const stmt = await ctx.env.DB.prepare(
       `UPDATE traffic_lights 
        SET ${updates.join(', ')}
-       WHERE id = 1`
+       WHERE id = 1
+       RETURNING *`
     );
-    await stmt.bind(...values).run();
+    const result = await stmt.bind(...values).first<TrafficLight>();
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      status: status || undefined,
-      distance_cm: distance_cm || undefined
-    }), {
+    if (!result) {
+      return new Response(JSON.stringify({ error: 'Failed to update and retrieve traffic light' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
