@@ -199,7 +199,7 @@ const handleClickRed = async () => {
       {/* Status Information */}
       <div className="text-center space-y-2">
         <div className="text-xl font-semibold">
-          Current Status: 
+          현재 신호: 
           <span className={`ml-2 ${
             status === 'red' ? 'text-red-500' :
             status === 'yellow' ? 'text-yellow-400' :
@@ -209,15 +209,18 @@ const handleClickRed = async () => {
           </span>
         </div>
         <div className="text-sm text-gray-500">
-          Last Updated: {lastUpdated} UTC
+          업데이트 시간: {lastUpdated} UTC
         </div>
       </div>
 
-        Force Update (강제 업데이트)
-        <button onClick={handleClickRed}>Red</button>
-        <button onClick={handleClickYellow}>Yellow</button>
-        <button onClick={handleClickGreen}>Green</button>
-
+      <div>
+        강제 웹사이트 업데이트 버튼 (신호등이 바뀌지는 않습니다)
+          <span>
+            <button onClick={handleClickRed}>Red</button>
+            <button onClick={handleClickYellow}>Yellow</button>
+            <button onClick={handleClickGreen}>Green</button>
+          </span>
+      </div>
 
     </div>
   );
