@@ -2,6 +2,7 @@
 import { NextRequest } from 'next/server';
 import type { D1Database } from '@cloudflare/workers-types';
 
+// Define types
 interface TrafficLight {
   id: number;
   distance_cm: number;
@@ -13,18 +14,34 @@ interface Env {
   DB: D1Database;
 }
 
+interface RouteContext {
+  env: Env;
+  params: Record<string, string | string[]>;
+}
+
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest, ctx: { env: Env }) {
-  if (!ctx.env?.DB) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const stmt = await ctx.env.DB.prepare(
+    const { env } = context;
+    
+    if (!env?.DB) {
+      return new Response(JSON.stringify({
+        error: 'Database not available',
+        debug: {
+          hasEnv: !!env,
+          envKeys: env ? Object.keys(env) : []
+        }
+      }), {
+        status: 503,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        },
+      });
+    }
+
+    const stmt = await env.DB.prepare(
       `SELECT id, distance_cm, status, last_updated 
        FROM traffic_lights 
        WHERE id = 1`
@@ -32,60 +49,92 @@ export async function GET(request: NextRequest, ctx: { env: Env }) {
     const result = await stmt.first<TrafficLight>();
 
     if (!result) {
-      return new Response(JSON.stringify({ error: 'Traffic light not found' }), {
+      return new Response(JSON.stringify({
+        error: 'No traffic light data found',
+        timestamp: new Date().toISOString()
+      }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        },
       });
     }
 
     return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      },
     });
+
   } catch (error) {
     console.error('Database error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Database error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    
+    return new Response(JSON.stringify({
+      error: 'Failed to fetch traffic light data',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      },
     });
   }
 }
 
-export async function POST(request: NextRequest, ctx: { env: Env }) {
-  if (!ctx.env?.DB) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
+export async function POST(request: NextRequest, context: RouteContext) {
   try {
+    const { env } = context;
+    
+    if (!env?.DB) {
+      return new Response(JSON.stringify({
+        error: 'Database not available',
+        debug: {
+          hasEnv: !!env,
+          envKeys: env ? Object.keys(env) : []
+        }
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const body = await request.json();
-    const { status, distance_cm } = body as { 
+    const { status, distance_cm } = body as {
       status?: 'red' | 'yellow' | 'green';
       distance_cm?: number;
     };
-    
+
     // Validate input
     if (status && !['red', 'yellow', 'green'].includes(status)) {
-      return new Response(JSON.stringify({ error: 'Invalid status' }), {
+      return new Response(JSON.stringify({
+        error: 'Invalid status. Must be red, yellow, or green.'
+      }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    if (distance_cm !== undefined && (typeof distance_cm !== 'number' || distance_cm < 0)) {
-      return new Response(JSON.stringify({ error: 'Invalid distance. Must be a non-negative number.' }), {
+    if (distance_cm !== undefined && (
+      typeof distance_cm !== 'number' || 
+      distance_cm < 0 || 
+      !Number.isFinite(distance_cm)
+    )) {
+      return new Response(JSON.stringify({
+        error: 'Invalid distance. Must be a non-negative number.'
+      }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Build the update query dynamically based on what fields are provided
+    // Build update query
     const updates = [];
     const values = [];
+    
     if (status) {
       updates.push('status = ?');
       values.push(status);
@@ -96,7 +145,8 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     }
     updates.push('last_updated = CURRENT_TIMESTAMP');
 
-    const stmt = await ctx.env.DB.prepare(
+    // Execute update
+    const stmt = await env.DB.prepare(
       `UPDATE traffic_lights 
        SET ${updates.join(', ')}
        WHERE id = 1
@@ -105,7 +155,9 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     const result = await stmt.bind(...values).first<TrafficLight>();
 
     if (!result) {
-      return new Response(JSON.stringify({ error: 'Failed to update traffic light' }), {
+      return new Response(JSON.stringify({
+        error: 'Failed to update traffic light'
+      }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -114,24 +166,16 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error('Database error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Database error',
+    
+    return new Response(JSON.stringify({
+      error: 'Failed to update traffic light',
       details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
-}
-
-// Add a debug endpoint to check database connection
-export async function OPTIONS(request: NextRequest, ctx: { env: Env }) {
-  return new Response(JSON.stringify({
-    databaseAvailable: !!ctx.env?.DB,
-    timestamp: new Date().toISOString()
-  }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
