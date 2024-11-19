@@ -2,7 +2,6 @@
 import { NextRequest } from 'next/server';
 import type { D1Database } from '@cloudflare/workers-types';
 
-// Define types
 interface TrafficLight {
   id: number;
   distance_cm: number;
@@ -10,27 +9,17 @@ interface TrafficLight {
   last_updated: string;
 }
 
-interface Env {
-  DB: D1Database;
-}
-
-interface RouteContext {
-  env: Env;
-  params: Record<string, string | string[]>;
-}
-
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest) {
   try {
-    const { env } = context;
+    const db = process.env.DB as unknown as D1Database;
     
-    if (!env?.DB) {
+    if (!db) {
       return new Response(JSON.stringify({
         error: 'Database not available',
         debug: {
-          hasEnv: !!env,
-          envKeys: env ? Object.keys(env) : []
+          envKeys: Object.keys(process.env)
         }
       }), {
         status: 503,
@@ -41,7 +30,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    const stmt = await env.DB.prepare(
+    const stmt = await db.prepare(
       `SELECT id, distance_cm, status, last_updated 
        FROM traffic_lights 
        WHERE id = 1`
@@ -85,17 +74,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export async function POST(request: NextRequest) {
   try {
-    const { env } = context;
+    const db = process.env.DB as unknown as D1Database;
     
-    if (!env?.DB) {
+    if (!db) {
       return new Response(JSON.stringify({
-        error: 'Database not available',
-        debug: {
-          hasEnv: !!env,
-          envKeys: env ? Object.keys(env) : []
-        }
+        error: 'Database not available'
       }), {
         status: 503,
         headers: { 'Content-Type': 'application/json' },
@@ -146,7 +131,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     updates.push('last_updated = CURRENT_TIMESTAMP');
 
     // Execute update
-    const stmt = await env.DB.prepare(
+    const stmt = await db.prepare(
       `UPDATE traffic_lights 
        SET ${updates.join(', ')}
        WHERE id = 1
