@@ -18,6 +18,97 @@ const TrafficLight = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
 
+// *************************************** Force Update Test *************************************** //
+
+const handleClickRed = async () => {
+    const data = {
+      status: "red",
+      distance_cm: 0,
+    };
+  
+    try {
+      // Make the POST request using the Fetch API
+      const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+  
+      const responseData = await response.json();
+      console.log('Success:', responseData);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
+  const handleClickYellow = async () => {
+    const data = {
+      status: "yellow",
+      distance_cm: 0,
+    };
+  
+    try {
+      // Make the POST request using the Fetch API
+      const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+  
+      const responseData = await response.json();
+      console.log('Success:', responseData);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
+  
+  const handleClickGreen = async () => {
+    const data = {
+      status: "green",
+      distance_cm: 0,
+    };
+  
+    try {
+      // Make the POST request using the Fetch API
+      const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+  
+      const responseData = await response.json();
+      console.log('Success:', responseData);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  // *************************************** Force Update Test End *************************************** //
+
+  
+
   const fetchStatus = async () => {
     try {
       const response = await fetch('/api/traffic');
@@ -121,6 +212,13 @@ const TrafficLight = () => {
           Last Updated: {lastUpdated}
         </div>
       </div>
+
+        Force Update (강제 업데이트)
+        <button onClick={handleClickRed}>Red</button>
+        <button onClick={handleClickYellow}>Yellow</button>
+        <button onClick={handleClickGreen}>Green</button>
+
+
     </div>
   );
 };

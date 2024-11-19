@@ -12,6 +12,93 @@ const TrafficLight = dynamic(() => import('@/components/TrafficLight'), {
   ),
 });
 
+
+const handleClickRed = async () => {
+  const data = {
+    status: "red",
+    distance_cm: 0,
+  };
+
+  try {
+    // Make the POST request using the Fetch API
+    const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Check for successful response
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Success:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+const handleClickYellow = async () => {
+  const data = {
+    status: "yellow",
+    distance_cm: 0,
+  };
+
+  try {
+    // Make the POST request using the Fetch API
+    const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Check for successful response
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Success:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+
+const handleClickGreen = async () => {
+  const data = {
+    status: "green",
+    distance_cm: 0,
+  };
+
+  try {
+    // Make the POST request using the Fetch API
+    const response = await fetch('/api/update', { // Replace '/api/your-endpoint' with your API URL or endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Check for successful response
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Success:', responseData);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+
 export default function Home() {
   return (
     <div className="space-y-8">
@@ -30,7 +117,9 @@ export default function Home() {
         <div className="max-w-md mx-auto">
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              <div className="animaTraffic Light Monitor
+
+Real-time traffic light monitoring system powered by Cloudflare Pages and D1 Database.te-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
           }>
             <TrafficLight />
