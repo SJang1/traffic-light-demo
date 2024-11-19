@@ -160,7 +160,7 @@ const handleClickRed = async () => {
     <div className="flex flex-col items-center justify-center space-y-6">
       {/* Distance Display */}
       <div className="text-xl font-semibold bg-gray-100 rounded-lg p-4 shadow-inner">
-        Distance: {distance === -1 ? '수동업데이트' : `${distance} cm`}
+        {distance === -1 ? '수동 업데이트됨' : `거리: ${distance} cm`}
       </div>
 
       {/* Traffic Light Housing */}
