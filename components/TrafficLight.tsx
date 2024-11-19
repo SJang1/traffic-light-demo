@@ -107,8 +107,12 @@ const handleClickRed = async () => {
 
   // *************************************** Force Update Test End *************************************** //
 
-  
 
+  const convertToLocalTime = (utcString: string) => {
+    const utcDate = new Date(utcString + "Z"); // Add "Z" to ensure it's treated as UTC
+    return utcDate.toLocaleString(); // Convert to local timezone and format
+  };
+  
   const fetchStatus = async () => {
     try {
       const response = await fetch('/api/traffic');
@@ -116,7 +120,8 @@ const handleClickRed = async () => {
       const data: TrafficLightData = await response.json();
       setStatus(data.status);
       setDistance(data.distance_cm);
-      setLastUpdated(new Date(data.last_updated).toLocaleTimeString());
+      const localTime = convertToLocalTime(data.last_updated);
+      setLastUpdated(localTime);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -209,7 +214,7 @@ const handleClickRed = async () => {
           </span>
         </div>
         <div className="text-sm text-gray-500">
-          업데이트 시간: {lastUpdated} UTC
+          업데이트 시간: {lastUpdated}
         </div>
       </div>
 
