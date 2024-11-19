@@ -13,7 +13,7 @@ export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   try {
-    const db = process.env.DB as unknown as D1Database;
+    const db = process.env.DB;
     
     if (!db) {
       return new Response(JSON.stringify({
