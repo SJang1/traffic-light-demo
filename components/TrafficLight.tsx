@@ -2,27 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 
-// Type for our traffic light status
 type TrafficLightStatus = 'red' | 'yellow' | 'green';
 
-// Type for our API response
 interface TrafficLightData {
   id: number;
-  location: number;
+  distance_cm: number;
   status: TrafficLightStatus;
   last_updated: string;
 }
 
-// Custom error class for type safety
-class TrafficLightError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'TrafficLightError';
-  }
-}
-
 const TrafficLight = () => {
   const [status, setStatus] = useState<TrafficLightStatus>('red');
+  const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -30,48 +21,17 @@ const TrafficLight = () => {
   const fetchStatus = async () => {
     try {
       const response = await fetch('/api/traffic');
-      
-      if (!response.ok) {
-        throw new TrafficLightError(
-          `Failed to fetch status: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const data = await response.json();
-      
-      // Type guard to ensure the response matches our expected structure
-      if (!isTrafficLightData(data)) {
-        throw new TrafficLightError('Invalid data format received from server');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch status');
+      const data: TrafficLightData = await response.json();
       setStatus(data.status);
+      setDistance(data.distance_cm);
       setLastUpdated(new Date(data.last_updated).toLocaleTimeString());
       setError(null);
-    } catch (error) {
-      // Proper error handling with type narrowing
-      if (error instanceof TrafficLightError) {
-        setError(error.message);
-      } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Type guard function to validate API response
-  const isTrafficLightData = (data: any): data is TrafficLightData => {
-    return (
-      typeof data === 'object' &&
-      data !== null &&
-      typeof data.id === 'number' &&
-      typeof data.location === 'number' &&
-      typeof data.status === 'string' &&
-      ['red', 'yellow', 'green'].includes(data.status) &&
-      typeof data.last_updated === 'string'
-    );
   };
 
   useEffect(() => {
@@ -98,9 +58,7 @@ const TrafficLight = () => {
             </svg>
           </div>
           <div className="ml-3">
-            <p className="text-sm text-red-700">
-              {error}
-            </p>
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         </div>
       </div>
@@ -109,6 +67,11 @@ const TrafficLight = () => {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-6">
+      {/* Distance Display */}
+      <div className="text-xl font-semibold bg-gray-100 rounded-lg p-4 shadow-inner">
+        Distance: {distance} cm
+      </div>
+
       {/* Traffic Light Housing */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-2xl">
         <div className="bg-gray-900 p-4 rounded-lg space-y-6">

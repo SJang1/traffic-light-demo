@@ -4,37 +4,34 @@ import type { D1Database } from '@cloudflare/workers-types';
 
 interface TrafficLight {
   id: number;
-  location: string;
+  distance_cm: number;
   status: 'red' | 'yellow' | 'green';
   last_updated: string;
 }
 
-interface Env {
-  DB: D1Database;
-}
-
 export const runtime = 'edge';
 
-// Mock data for development
+// Mock data updated with distance
 const mockTrafficLight: TrafficLight = {
   id: 1,
-  location: 'Main Street',
+  distance_cm: 150,
   status: 'red',
   last_updated: new Date().toISOString()
 };
 
-export async function GET(request: NextRequest, context: { env?: Env }) {
+export async function GET(request: NextRequest) {
+  const env = process.env.DB;
+
   try {
-    // Check if we're in development without DB
-    if (!context.env?.DB) {
+    if (!env?.DB) {
       console.warn('No DB binding found, using mock data');
       return new Response(JSON.stringify(mockTrafficLight), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const stmt = await context.env.DB.prepare(
-      `SELECT id, location, status, last_updated 
+    const stmt = await env.DB.prepare(
+      `SELECT id, distance_cm, status, last_updated 
        FROM traffic_lights 
        WHERE id = 1`
     );
@@ -52,14 +49,6 @@ export async function GET(request: NextRequest, context: { env?: Env }) {
     });
   } catch (error) {
     console.error('Database error:', error);
-    
-    // In development, fall back to mock data
-    if (!context.env?.DB) {
-      return new Response(JSON.stringify(mockTrafficLight), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     return new Response(JSON.stringify({ error: 'Failed to fetch traffic light status' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -67,40 +56,71 @@ export async function GET(request: NextRequest, context: { env?: Env }) {
   }
 }
 
-export async function POST(request: NextRequest, context: { env?: Env }) {
+export async function POST(request: NextRequest) {
+  const env = process.env.DB;
+
   try {
-    const { status } = await request.json() as { status?: 'red' | 'yellow' | 'green' };
+    const body = await request.json();
+    const { status, distance_cm } = body as { 
+      status?: 'red' | 'yellow' | 'green';
+      distance_cm?: number;
+    };
     
-    if (!status || !['red', 'yellow', 'green'].includes(status)) {
+    // Validate input
+    if (status && !['red', 'yellow', 'green'].includes(status)) {
       return new Response(JSON.stringify({ error: 'Invalid status' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Check if we're in development without DB
-    if (!context.env?.DB) {
-      console.warn('No DB binding found, using mock data');
-      mockTrafficLight.status = status;
-      mockTrafficLight.last_updated = new Date().toISOString();
-      return new Response(JSON.stringify({ success: true, status }), {
+    if (distance_cm !== undefined && (typeof distance_cm !== 'number' || distance_cm < 0)) {
+      return new Response(JSON.stringify({ error: 'Invalid distance. Must be a non-negative number.' }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const stmt = await context.env.DB.prepare(
+    if (!env?.DB) {
+      console.warn('No DB binding found, using mock data');
+      if (status) mockTrafficLight.status = status;
+      if (distance_cm !== undefined) mockTrafficLight.distance_cm = distance_cm;
+      mockTrafficLight.last_updated = new Date().toISOString();
+      return new Response(JSON.stringify(mockTrafficLight), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Build the update query dynamically based on what fields are provided
+    const updates = [];
+    const values = [];
+    if (status) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+    if (distance_cm !== undefined) {
+      updates.push('distance_cm = ?');
+      values.push(distance_cm);
+    }
+    updates.push('last_updated = CURRENT_TIMESTAMP');
+
+    const stmt = await env.DB.prepare(
       `UPDATE traffic_lights 
-       SET status = ?, last_updated = CURRENT_TIMESTAMP 
+       SET ${updates.join(', ')}
        WHERE id = 1`
     );
-    await stmt.bind(status).run();
+    await stmt.bind(...values).run();
 
-    return new Response(JSON.stringify({ success: true, status }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      status: status || undefined,
+      distance_cm: distance_cm || undefined
+    }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Database error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to update traffic light status' }), {
+    return new Response(JSON.stringify({ error: 'Failed to update traffic light' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
