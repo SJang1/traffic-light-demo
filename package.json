@@ -13,6 +13,10 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^15.0.3",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18"
