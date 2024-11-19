@@ -23,7 +23,7 @@ const TrafficLight = () => {
 const handleClickRed = async () => {
     const data = {
       status: "red",
-      distance_cm: 0,
+      distance_cm: -1,
     };
   
     try {
@@ -51,7 +51,7 @@ const handleClickRed = async () => {
   const handleClickYellow = async () => {
     const data = {
       status: "yellow",
-      distance_cm: 0,
+      distance_cm: -1,
     };
   
     try {
@@ -80,7 +80,7 @@ const handleClickRed = async () => {
   const handleClickGreen = async () => {
     const data = {
       status: "green",
-      distance_cm: 0,
+      distance_cm: -1,
     };
   
     try {
@@ -160,7 +160,7 @@ const handleClickRed = async () => {
     <div className="flex flex-col items-center justify-center space-y-6">
       {/* Distance Display */}
       <div className="text-xl font-semibold bg-gray-100 rounded-lg p-4 shadow-inner">
-        Distance: {distance} cm
+        Distance: {distance === -1 ? '수동업데이트' : distance + 'cm'}
       </div>
 
       {/* Traffic Light Housing */}
@@ -216,8 +216,8 @@ const handleClickRed = async () => {
       <div>
         강제 웹사이트 업데이트 버튼 (신호등이 바뀌지는 않습니다)
           <span>
-            <button onClick={handleClickRed}>Red</button>
-            <button onClick={handleClickYellow}>Yellow</button>
+            <button onClick={handleClickRed}>Red</button> 
+            <button onClick={handleClickYellow}>Yellow</button> 
             <button onClick={handleClickGreen}>Green</button>
           </span>
       </div>
