@@ -40,9 +40,9 @@ function validateUpdateRequest(data: any): { isValid: boolean; error?: string } 
     if (typeof distance_cm !== 'number') {
       return { isValid: false, error: 'distance_cm must be a number' };
     }
-    //if (distance_cm < 0) {
-    //  return { isValid: false, error: 'distance_cm must be non-negative' };
-    //}
+    if (distance_cm < -1) {
+      return { isValid: false, error: 'distance_cm must be non-negative' };
+    }
     if (!Number.isFinite(distance_cm)) {
       return { isValid: false, error: 'distance_cm must be a finite number' };
     }
