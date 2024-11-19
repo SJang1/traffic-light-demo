@@ -105,10 +105,10 @@ export default function Home() {
       {/* Page Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Traffic Light Monitor
+          신호등 상태 모니터링
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Real-time traffic light monitoring system powered by Cloudflare Pages and D1 Database.
+          준-실시간으로 신호등 상태를 모니터링할 수 있는 시스템입니다.
         </p>
       </div>
 
@@ -132,30 +132,30 @@ Real-time traffic light monitoring system powered by Cloudflare Pages and D1 Dat
         {/* Status Card */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            Real-time Updates
+            실시간 업데이트
           </h2>
           <p className="text-gray-600">
-            Traffic light status is updated every second using Cloudflare's edge network.
+            Powered by Cloudflare Pages and D1 Database, Traffic light status is updated every second.
           </p>
         </div>
 
         {/* Database Card */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            D1 Database
+            데이터베이스
           </h2>
           <p className="text-gray-600">
-            Powered by Cloudflare D1, providing fast and reliable data storage at the edge.
+            Cloudflare의 D1 SQL 데이터베이스를 이용해서, 신속하고 안정적으로 서비스를 제공할 수 있습니다.
           </p>
         </div>
 
         {/* Edge Network Card */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            Global Edge Network
+            네트워크
           </h2>
           <p className="text-gray-600">
-            Deployed on Cloudflare's global network for minimal latency worldwide.
+            전세계 어디서나 낮은 지연시간으로 실시간으로 신호등 정보를 알 수 있습니다.
           </p>
         </div>
       </div>
