@@ -27,7 +27,7 @@ pages_build_output_dir = ".vercel/output/static"
 # Bind a D1 database. D1 is Cloudflare’s native serverless SQL database.
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#d1-databases
 [[d1_databases]]
-binding = "DB1"
+binding = "DB"
 database_name = "traffic-light-demo"
 database_id = "02485f82-5c1e-44ee-8fd0-935f282deceb"
 
