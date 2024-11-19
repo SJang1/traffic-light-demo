@@ -9,30 +9,21 @@ interface TrafficLight {
   last_updated: string;
 }
 
-// Define the environment interface
 interface Env {
   DB: D1Database;
 }
 
 export const runtime = 'edge';
 
-// Mock data updated with distance
-const mockTrafficLight: TrafficLight = {
-  id: 1,
-  distance_cm: 150,
-  status: 'red',
-  last_updated: new Date().toISOString()
-};
-
 export async function GET(request: NextRequest, ctx: { env: Env }) {
-  try {
-    if (!ctx.env) {
-      console.warn('No environment bindings found, using mock data');
-      return new Response(JSON.stringify(mockTrafficLight), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  if (!ctx.env?.DB) {
+    return new Response(JSON.stringify({ error: 'Database not configured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
+  try {
     const stmt = await ctx.env.DB.prepare(
       `SELECT id, distance_cm, status, last_updated 
        FROM traffic_lights 
@@ -52,7 +43,10 @@ export async function GET(request: NextRequest, ctx: { env: Env }) {
     });
   } catch (error) {
     console.error('Database error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch traffic light status' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Database error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -60,6 +54,13 @@ export async function GET(request: NextRequest, ctx: { env: Env }) {
 }
 
 export async function POST(request: NextRequest, ctx: { env: Env }) {
+  if (!ctx.env?.DB) {
+    return new Response(JSON.stringify({ error: 'Database not configured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const body = await request.json();
     const { status, distance_cm } = body as { 
@@ -78,16 +79,6 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     if (distance_cm !== undefined && (typeof distance_cm !== 'number' || distance_cm < 0)) {
       return new Response(JSON.stringify({ error: 'Invalid distance. Must be a non-negative number.' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!ctx.env) {
-      console.warn('No environment bindings found, using mock data');
-      if (status) mockTrafficLight.status = status;
-      if (distance_cm !== undefined) mockTrafficLight.distance_cm = distance_cm;
-      mockTrafficLight.last_updated = new Date().toISOString();
-      return new Response(JSON.stringify(mockTrafficLight), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -114,7 +105,7 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     const result = await stmt.bind(...values).first<TrafficLight>();
 
     if (!result) {
-      return new Response(JSON.stringify({ error: 'Failed to update and retrieve traffic light' }), {
+      return new Response(JSON.stringify({ error: 'Failed to update traffic light' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -125,9 +116,22 @@ export async function POST(request: NextRequest, ctx: { env: Env }) {
     });
   } catch (error) {
     console.error('Database error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to update traffic light' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Database error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
+}
+
+// Add a debug endpoint to check database connection
+export async function OPTIONS(request: NextRequest, ctx: { env: Env }) {
+  return new Response(JSON.stringify({
+    databaseAvailable: !!ctx.env?.DB,
+    timestamp: new Date().toISOString()
+  }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
