@@ -209,7 +209,7 @@ const handleClickRed = async () => {
           </span>
         </div>
         <div className="text-sm text-gray-500">
-          Last Updated: {lastUpdated}
+          Last Updated: {lastUpdated} UTC
         </div>
       </div>
 
