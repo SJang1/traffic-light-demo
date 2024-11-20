@@ -1,11 +1,10 @@
-// app/api/update/route.ts
 import { NextRequest } from 'next/server';
 import type { D1Database } from '@cloudflare/workers-types';
 
 // Types for request validation
 interface UpdateRequest {
-  status?: 'red' | 'yellow' | 'green';
-  distance_cm?: number;
+  status: 'red' | 'yellow' | 'green';
+  distance_cm: number;
 }
 
 interface TrafficLight {
@@ -17,140 +16,140 @@ interface TrafficLight {
 
 export const runtime = 'edge';
 
-// Helper function to validate the request body
-function validateUpdateRequest(data: any): { isValid: boolean; error?: string } {
+// Helper function to validate individual traffic light data
+function validateTrafficLightData(data: any): { isValid: boolean; error?: string } {
   if (!data) {
-    return { isValid: false, error: 'Request body is required' };
+    return { isValid: false, error: 'Data is required' };
   }
 
-  const { status, distance_cm } = data as UpdateRequest;
+  let { status, distance_cm } = data;
 
-  // If neither field is provided
-  if (status === undefined && distance_cm === undefined) {
-    return { isValid: false, error: 'At least one of status or distance_cm must be provided' };
+  // Treat undefined distance_cm as -1
+  if (distance_cm === undefined) {
+    distance_cm = -1;
   }
 
-  // Validate status if provided
-  if (status !== undefined && !['red', 'yellow', 'green'].includes(status)) {
-    return { isValid: false, error: 'Invalid status. Must be red, yellow, or green' };
+  if (status && !['red', 'yellow', 'green'].includes(status)) {
+    return { isValid: false, error: 'Invalid status. Must be red, yellow, or green.' };
   }
 
-  // Validate distance if provided
-  if (distance_cm !== undefined) {
-    if (typeof distance_cm !== 'number') {
-      return { isValid: false, error: 'distance_cm must be a number' };
-    }
-    if (distance_cm < -1) {
-      return { isValid: false, error: 'distance_cm must be non-negative' };
-    }
-    if (!Number.isFinite(distance_cm)) {
-      return { isValid: false, error: 'distance_cm must be a finite number' };
-    }
+  if (distance_cm < -1 || typeof distance_cm !== 'number') {
+    return { isValid: false, error: 'distance_cm must be -1 or a non-negative number.' };
   }
 
   return { isValid: true };
 }
 
+
+// POST handler for updating traffic light statuses
 export async function POST(request: NextRequest) {
   try {
-    const db = process.env.DB;
-    
+    const db = process.env.DB as D1Database;
+
     if (!db) {
-      return new Response(JSON.stringify({
-        error: 'Database not available'
-      }), {
+      return new Response(JSON.stringify({ error: 'Database not available' }), {
         status: 503,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Parse and validate request body
-    let body: UpdateRequest;
+    let body: Record<string, UpdateRequest>;
+
+    // Parse the incoming request body as JSON
     try {
       body = await request.json();
     } catch (e) {
-      return new Response(JSON.stringify({
-        error: 'Invalid JSON in request body'
-      }), {
+      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate the request
-    const validation = validateUpdateRequest(body);
-    if (!validation.isValid) {
-      return new Response(JSON.stringify({
-        error: validation.error
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { status, distance_cm } = body;
-
-    // Build update query dynamically
+    const errors = [];
     const updates = [];
-    const values = [];
-    
-    if (status !== undefined) {
-      updates.push('status = ?');
-      values.push(status);
-    }
-    if (distance_cm !== undefined) {
-      updates.push('distance_cm = ?');
-      values.push(distance_cm);
-    }
-    updates.push('last_updated = CURRENT_TIMESTAMP');
 
-    // Prepare and execute the update query
-    const stmt = await db.prepare(
-      `UPDATE traffic_lights 
-       SET ${updates.join(', ')}
-       WHERE id = 1
-       RETURNING *`
+    // Iterate over each ID in the request body
+    for (const id in body) {
+      const trafficLightData = body[id];
+      const validation = validateTrafficLightData(trafficLightData);
+
+      if (!validation.isValid) {
+        errors.push({ id, error: validation.error });
+        continue;
+      }
+
+      const { status, distance_cm } = trafficLightData;
+
+      const updateQueryParts = [];
+      const values: any[] = [];
+
+      if (status) {
+        updateQueryParts.push('status = ?');
+        values.push(status);
+      }
+
+      if (distance_cm !== undefined) {
+        updateQueryParts.push('distance_cm = ?');
+        values.push(distance_cm);
+      }
+
+      updateQueryParts.push('last_updated = CURRENT_TIMESTAMP');
+
+      const updateQuery = `
+        UPDATE traffic_lights
+        SET ${updateQueryParts.join(', ')}
+        WHERE id = ?
+        RETURNING *;
+      `;
+
+      values.push(parseInt(id));
+
+      try {
+        const result = await db.prepare(updateQuery).bind(...values).first<TrafficLight>();
+        if (result) {
+          updates.push({ id, result });
+        } else {
+          errors.push({ id, error: 'Failed to update traffic light.' });
+        }
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+        errors.push({ id, error: errorMessage });
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        message: 'Processed updates',
+        updates,
+        errors,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
-    const result = await stmt.bind(...values).first<TrafficLight>();
-
-    if (!result) {
-      return new Response(JSON.stringify({
-        error: 'Failed to update traffic light'
-      }), {
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: 'Unexpected error while processing updates',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      }),
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({
-      message: 'Update successful',
-      data: result,
-      timestamp: new Date().toISOString()
-    }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('Update error:', error);
-    
-    return new Response(JSON.stringify({
-      error: 'Failed to update traffic light',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+      }
+    );
   }
 }
 
-// Add OPTIONS method for CORS preflight requests
-export async function OPTIONS(request: NextRequest) {
+// OPTIONS handler for CORS preflight requests
+export async function OPTIONS() {
   return new Response(null, {
     headers: {
       'Allow': 'POST, OPTIONS',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
   });
 }
