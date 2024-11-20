@@ -20,6 +20,7 @@ const TrafficLight = () => {
 
 // *************************************** Force Update Test *************************************** //
 
+  /*
 const handleClickRed = async () => {
     const data = {
       status: "red",
@@ -104,7 +105,7 @@ const handleClickRed = async () => {
       console.error('Error:', error);
     }
   };
-
+*/
   // *************************************** Force Update Test End *************************************** //
 
 
@@ -218,6 +219,7 @@ const handleClickRed = async () => {
         </div>
       </div>
 
+      {/*
       <div>
         강제 웹사이트 업데이트 버튼 (신호등이 바뀌지는 않습니다)
           <span>
@@ -226,7 +228,7 @@ const handleClickRed = async () => {
             <button onClick={handleClickGreen}>Green</button>
           </span>
       </div>
-
+      */}
     </div>
   );
 };
