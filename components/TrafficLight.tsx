@@ -85,7 +85,7 @@ const TrafficLight = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-12">
+    <div className="flex flex-row items-center justify-center space-x-12">
       {Object.values(lights).map((light) => (
         <div key={light.id} className="flex flex-col items-center space-y-6">
           {/* Light Name */}
