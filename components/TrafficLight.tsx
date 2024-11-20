@@ -145,7 +145,7 @@ const TrafficLight = () => {
                 {light.status.charAt(0).toUpperCase() + light.status.slice(1)}
               </span>
             </div>
-            <div className="text-sm text-gray-500">업데이트 시간: {light.last_updated}</div>
+            <div className="text-sm text-gray-500">{light.last_updated}</div>
           </div>
         </div>
       ))}
