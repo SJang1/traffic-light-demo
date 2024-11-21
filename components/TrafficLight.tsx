@@ -51,7 +51,7 @@ const TrafficLight = () => {
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 1000);
+    const interval = setInterval(fetchStatus, 500); 
     return () => clearInterval(interval);
   }, []);
 
