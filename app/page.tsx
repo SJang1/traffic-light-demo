@@ -135,7 +135,7 @@ Real-time traffic light monitoring system powered by Cloudflare Pages and D1 Dat
             실시간 업데이트
           </h2>
           <p className="text-gray-600">
-            신호등 정보는 매 1/2초마다 업데이트됩니다. 이는 Cloudflare의 Serverless Platform을 이용해서 가능해졌습니다.
+            신호등 정보는 매 ½초마다 업데이트됩니다. 이는 Cloudflare의 Serverless Platform을 이용해서 가능해졌습니다.
           </p>
         </div>
 
