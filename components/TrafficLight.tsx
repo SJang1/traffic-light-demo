@@ -82,8 +82,16 @@ const TrafficLight = () => {
       ws.close();
     }, 3600000);
     
+    const sendMessage = () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ message: 'Update' }));
+      }
+    };
+    const intervalId = setInterval(sendMessage, 500); // Send message every 0.1 seconds
+
     // Cleanup WebSocket on component unmount
     return () => {
+      clearInterval(intervalId);
       ws.close();
     };
   }, []);
