@@ -39,11 +39,6 @@ name = "traffic-light-demo-do-websocket"
 class_name = "TrafficLightDurableObject"
 script_name = 'traffic-light-demo-do-websocket'
 
-[[durable_objects]]
-name = "traffic-light-demo-do-websocket"
-class_name = "TrafficLightDurableObject"
-script_name = 'traffic-light-demo-do-websocket'
-
 [[migrations]]
 tag = "v1"
 new_classes = ["TrafficLightDurableObject"]

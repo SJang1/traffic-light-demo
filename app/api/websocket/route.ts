@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { NextRequest } from 'next/server';
 
 interface TrafficLight {
   id: number;
@@ -21,7 +22,7 @@ export class TrafficLightDurableObject implements DurableObject {
     this.startPollingDatabase();
   }
 
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: NextRequest): Promise<Response> {
     const upgradeHeader = request.headers.get('Upgrade');
     if (upgradeHeader === 'websocket') {
       const webSocketPair = new WebSocketPair();
