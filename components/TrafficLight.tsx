@@ -87,7 +87,7 @@ const TrafficLight = () => {
         ws.send(JSON.stringify({ message: 'Update' }));
       }
     };
-    const intervalId = setInterval(sendMessage, 500); // Send message every 0.1 seconds
+    //const intervalId = setInterval(sendMessage, 500); // Send message every 0.5 seconds
 
     // Cleanup WebSocket on component unmount
     return () => {
