@@ -24,7 +24,7 @@ const TrafficLight = () => {
   };
 
   const convertToLocalTime = (utcString: string) => {
-    const utcDate = new Date(utcString + "Z");
+    const utcDate = new Date(utcString);
     return utcDate.toLocaleString();
   };
 
@@ -115,6 +115,7 @@ const TrafficLight = () => {
 
   return (
     <div className="flex flex-row items-center justify-center space-x-12">
+      접속자 수: {connectedUsers}
       {Object.values(lights).map((light) => (
         <div key={light.id} className="flex flex-col items-center space-y-6">
           {/* Light Name */}
