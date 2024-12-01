@@ -34,14 +34,10 @@ database_id = "02485f82-5c1e-44ee-8fd0-935f282deceb"
 # Bind a Durable Object. Durable objects are a scale-to-zero compute primitive based on the actor model.
 # Durable Objects can live for as long as needed. Use these when you need a long-running "server", such as in realtime apps.
 # Docs: https://developers.cloudflare.com/workers/runtime-apis/durable-objects
-[[durable_objects.bindings]]
-name = "traffic-light-demo-do-websocket"
-class_name = "TrafficLightDurableObject"
-script_name = 'traffic-light-demo-do-websocket'
-
-[[migrations]]
-tag = "v1"
-new_classes = ["TrafficLightDurableObject"]
+# [[durable_objects.bindings]]
+# name = "traffic-light-demo-do-websocket"
+# class_name = "TrafficLightDurableObject"
+# script_name = 'traffic-light-demo-do-websocket'
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#kv-namespaces
