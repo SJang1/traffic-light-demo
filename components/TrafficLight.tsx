@@ -77,6 +77,11 @@ const TrafficLight = () => {
       setError('WebSocket connection closed');
     };
 
+    // close websocket connection after 1 hour
+    setTimeout(() => {
+      ws.close();
+    }, 3600000);
+    
     // Cleanup WebSocket on component unmount
     return () => {
       ws.close();
