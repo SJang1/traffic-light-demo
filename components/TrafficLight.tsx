@@ -114,11 +114,10 @@ const TrafficLight = () => {
   }
 
   return (
+    <div>
+    현재 접속자 수 : {connectedUsers}
+    오류여부 : {error}
     <div className="flex flex-row items-center justify-center space-x-12">
-      <div className="items-center">
-        접속자 수: {connectedUsers}
-        오류여부" {error ? `있음: ${error}` : '없음'}
-      </div>
       {Object.values(lights).map((light) => (
         <div key={light.id} className="flex flex-col items-center space-y-6">
           {/* Light Name */}
@@ -182,6 +181,7 @@ const TrafficLight = () => {
           </div>
         </div>
       ))}
+    </div>
     </div>
   );
 };
