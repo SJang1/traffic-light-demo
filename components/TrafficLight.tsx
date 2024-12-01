@@ -27,33 +27,54 @@ const TrafficLight = () => {
     return utcDate.toLocaleString();
   };
 
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch('/api/traffic');
-      if (!response.ok) throw new Error('Failed to fetch status');
-      const data: Record<number, TrafficLightData> = await response.json();
-      const updatedData = Object.keys(data).reduce((acc, id) => {
-        const light = data[Number(id)];
-        acc[Number(id)] = {
-          ...light,
-          last_updated: convertToLocalTime(light.last_updated),
-        };
-        return acc;
-      }, {} as Record<number, TrafficLightData>);
-      setLights(updatedData);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 500); 
-    return () => clearInterval(interval);
+    const ws = new WebSocket('/api/websocket'); // Replace with your WebSocket endpoint
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+      setLoading(false);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data: Record<number, TrafficLightData> = JSON.parse(event.data);
+
+        const updatedData = Object.keys(data).reduce((acc, id) => {
+          const light = data[Number(id)];
+          acc[Number(id)] = {
+            ...light,
+            last_updated: convertToLocalTime(light.last_updated),
+          };
+          return acc;
+        }, {} as Record<number, TrafficLightData>);
+
+        setLights((prevLights) => ({
+          ...prevLights,
+          ...updatedData,
+        }));
+        setError(null);
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
+        setError('Failed to process incoming data');
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      setError('WebSocket connection error');
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+      setError('WebSocket connection closed');
+    };
+
+    // Cleanup WebSocket on component unmount
+    return () => {
+      ws.close();
+    };
   }, []);
+
 
   if (loading) {
     return (
