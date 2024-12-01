@@ -129,8 +129,6 @@ const TrafficLight = () => {
   return (
     <div>
       <div className='flex flex-row items-center justify-center space-x-12'>
-        현재 접속자 수 : {connectedUsers}
-        <br />
         {error ? `에러 발생: ${error}` : ''}
     </div>
     <div className="flex flex-row items-center justify-center space-x-12">
@@ -197,6 +195,10 @@ const TrafficLight = () => {
           </div>
         </div>
       ))}
+    </div>
+    <div className="flex items-center justify-center mt-8">
+      <br />
+      <p className="text-gray-500">현재 연결된 사용자 수: {connectedUsers}명</p>
     </div>
     </div>
   );

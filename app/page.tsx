@@ -108,7 +108,7 @@ export default function Home() {
           신호등 상태 모니터링
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          준-실시간으로 신호등 상태를 모니터링할 수 있는 시스템입니다.
+          거의 실시간으로 신호등 상태를 모니터링할 수 있는 시스템입니다.
         </p>
       </div>
 
@@ -135,17 +135,17 @@ Real-time traffic light monitoring system powered by Cloudflare Pages and D1 Dat
             실시간 업데이트
           </h2>
           <p className="text-gray-600">
-            신호등 정보는 매 ½초마다 업데이트됩니다. 이는 Cloudflare의 Serverless Platform을 이용해서 가능해졌습니다.
+            신호등 정보는 자동으로 업데이트됩니다. 이는 Cloudflare의 Serverless Platform을 이용해서 가능했습니다.
           </p>
         </div>
 
         {/* Database Card */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            데이터베이스
+            KV 데이터베이스
           </h2>
           <p className="text-gray-600">
-            Cloudflare의 D1 SQL 데이터베이스를 이용해서, 신속하고 안정적으로 서비스를 제공할 수 있습니다.
+            Cloudflare의 Durable Objects를 이용해서, 신속하고 안정적으로 서비스를 제공할 수 있습니다.
           </p>
         </div>
 
