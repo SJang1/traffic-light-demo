@@ -16,6 +16,7 @@ const TrafficLight = () => {
   const [lights, setLights] = useState<Record<number, TrafficLightData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectedUsers, setConnectedUsers] = useState<number>(0);
 
   const trafficLightNames: Record<number, string> = {
     1: '트램',
@@ -23,37 +24,78 @@ const TrafficLight = () => {
   };
 
   const convertToLocalTime = (utcString: string) => {
-    const utcDate = new Date(utcString + "Z");
+    const utcDate = new Date(utcString);
     return utcDate.toLocaleString();
   };
 
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch('/api/traffic');
-      if (!response.ok) throw new Error('Failed to fetch status');
-      const data: Record<number, TrafficLightData> = await response.json();
-      const updatedData = Object.keys(data).reduce((acc, id) => {
-        const light = data[Number(id)];
-        acc[Number(id)] = {
-          ...light,
-          last_updated: convertToLocalTime(light.last_updated),
-        };
-        return acc;
-      }, {} as Record<number, TrafficLightData>);
-      setLights(updatedData);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 500); 
-    return () => clearInterval(interval);
+    const ws = new WebSocket('/websocket'); // Replace with your WebSocket endpoint
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+      setLoading(false);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Extract and update connected users count
+        if (data.connectedusers !== undefined) {
+          setConnectedUsers(data.connectedusers);
+        }
+
+        // Extract and update traffic light data
+        const updatedLights = Object.keys(data)
+          .filter((key) => !isNaN(Number(key))) // Only process numeric keys
+          .reduce((acc, key) => {
+            const light = data[key];
+            acc[Number(key)] = {
+              ...light,
+              last_updated: convertToLocalTime(light.last_updated),
+            };
+            return acc;
+          }, {} as Record<number, TrafficLightData>);
+
+        setLights((prevLights) => ({
+          ...prevLights,
+          ...updatedLights,
+        }));
+        setError(null);
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
+        setError('Failed to process incoming data');
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      setError('WebSocket connection error');
+    };
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+      setError('WebSocket connection closed');
+    };
+
+    // close websocket connection after 1 hour
+    setTimeout(() => {
+      ws.close();
+    }, 3600000);
+    
+    const sendMessage = () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ message: 'Update' }));
+      }
+    };
+    //const intervalId = setInterval(sendMessage, 500); // Send message every 0.5 seconds
+
+    // Cleanup WebSocket on component unmount
+    return () => {
+      //clearInterval(intervalId);
+      ws.close();
+    };
   }, []);
+
 
   if (loading) {
     return (
@@ -85,6 +127,12 @@ const TrafficLight = () => {
   }
 
   return (
+    <div>
+      <div className='flex flex-row items-center justify-center space-x-12'>
+        현재 접속자 수 : {connectedUsers}
+        <br />
+        {error ? `에러 발생: ${error}` : ''}
+    </div>
     <div className="flex flex-row items-center justify-center space-x-12">
       {Object.values(lights).map((light) => (
         <div key={light.id} className="flex flex-col items-center space-y-6">
@@ -149,6 +197,7 @@ const TrafficLight = () => {
           </div>
         </div>
       ))}
+    </div>
     </div>
   );
 };
