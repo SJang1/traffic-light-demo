@@ -91,7 +91,7 @@ const TrafficLight = () => {
 
     // Cleanup WebSocket on component unmount
     return () => {
-      clearInterval(intervalId);
+      //clearInterval(intervalId);
       ws.close();
     };
   }, []);
