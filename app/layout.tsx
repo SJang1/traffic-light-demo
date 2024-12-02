@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: '신호등 상태 모니터링',
-  description: 'Real-time traffic light monitoring system using Cloudflare Pages and D1',
+  description: 'Real-time traffic light monitoring system',
 };
 
 export default function RootLayout({
